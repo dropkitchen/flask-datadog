@@ -1,5 +1,7 @@
 import time
 
+from datadog import initialize
+from datadog import api as dogapi
 from datadog.dogstatsd.base import DogStatsd
 from flask import g, request
 
@@ -226,3 +228,83 @@ class StatsD(object):
     def __exit__(self, *args, **kwargs):
         """Helper to expose the underlying `DogStatsd` client for context managing"""
         return self.statsd.__exit__(*args, **kwargs)
+
+
+class API(object):
+    def __init__(self, app=None, config=None):
+        """
+        Constructor for `flask.ext.datadog.API`
+
+        >>> from flask.ext.datadog import API
+        >>> app = Flask(__name__)
+        >>> dogapi = API(app=app)
+
+        :param app: Flask app to configure this client for, if `app` is `None`, then do not
+            configure yet (call `init_app` manually instead)
+        :type app: flask.Flask or None
+
+        :param config: Configuration for this client to use instead of `app.config`
+        :type config: dict or None
+        """
+        self.config = config
+
+        # If an app was provided, then call `init_app` for them
+        if app is not None:
+            self.init_app(app)
+        else:
+            self.app = None
+
+    def init_app(self, app, config=None):
+        """
+        Initialize Datadog API client from Flask app
+
+        >>> from flask.ext.datadog import API
+        >>> app = Flask(__name__)
+        >>> dogapi = API()
+        >>> dogapi.init_app(app=app)
+
+        Available config settings:
+
+          DATADOG_API_KEY - Datadog API key from https://app.datadoghq.com/account/settings#api
+          DATADOG_APP_KEY - Datadog APP key from https://app.datadoghq.com/account/settings#api
+
+        :param app: Flask app to configure this client for
+        :type app: flask.Flask
+
+        :param config: optional, dictionary of config values (defaults to `app.config`)
+        :type config: dict
+        """
+        # Used passed in config if provided, otherwise use the config from `app`
+        if config is not None:
+            self.config = config
+        elif self.config is None:
+            self.config = app.config
+
+        # Set default values for expected config properties
+        self.config.setdefault('DATADOG_API_KEY', None)
+        self.config.setdefault('DATADOG_APP_KEY', None)
+
+        self.app = app
+
+        # Initialize datadog client
+        # DEV: Datadog client uses module level variables for storing API keys rather than initializing a
+        #   class to manage a connection/and keys
+        # https://github.com/DataDog/datadogpy/blob/v0.11.0/datadog/__init__.py
+        # https://github.com/DataDog/datadogpy/blob/v0.11.0/datadog/api/__init__.py#L4-L9
+        options = {
+            'api_key': self.config['DATADOG_API_KEY'],
+            'app_key': self.config['DATADOG_APP_KEY'],
+        }
+        initialize(**options)
+
+    def __getattr__(self, name):
+        """
+        Magic method for fetching attributes from `datadog.api`
+
+        We utilize `__getattr__` to ensure that we are always compatible with
+        the `datadog.api` module.
+        """
+        # If `self.statsd` has the attribute then return that attribute
+        if dogapi and hasattr(dogapi, name):
+            return getattr(dogapi, name)
+        raise AttributeError('\'API\' has has attribute \'{name}\''.format(name=name))
