@@ -3,10 +3,11 @@ import time
 from datadog import initialize
 from datadog import api as dogapi
 from datadog.dogstatsd.base import DogStatsd
+from datadog.dogstatsd.context import TimedContextManagerDecorator
 from flask import g, request
 
 
-class TimerWrapper(DogStatsd._TimedContextManagerDecorator):
+class TimerWrapper(TimedContextManagerDecorator):
     def __init__(self, statsd, *args, **kwargs):
         super(TimerWrapper, self).__init__(statsd, *args, **kwargs)
 
