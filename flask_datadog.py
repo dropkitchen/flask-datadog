@@ -173,19 +173,21 @@ class StatsD(object):
             self.add_request_tags(['status_code:%s' % (response.status_code, )])
 
         tags = self.get_request_tags()
+        sample_rate = self.config['DATADOG_RESPONSE_SAMPLE_RATE']
 
         # Emit timing metric
         self.statsd.timing(self.config['DATADOG_RESPONSE_METRIC_NAME'],
                            elapsed,
                            tags,
-                           self.config['DATADOG_RESPONSE_SAMPLE_RATE'])
+                           sample_rate)
 
         # Emit response size metric
-        size = len(response.data)
-        self.statsd.increment(self.config['DATADOG_RESPONSE_SIZE_METRIC_NAME'],
-                              size,
-                              tags,
-                              self.config['DATADOG_RESPONSE_SAMPLE_RATE'])
+        if 'content-length' in response.headers:
+            size = int(response.headers['content-length'])
+            self.statsd.histogram(self.config['DATADOG_RESPONSE_SIZE_METRIC_NAME'],
+                                  size,
+                                  tags,
+                                  sample_rate)
 
         # We ALWAYS have to return the original response
         return response
