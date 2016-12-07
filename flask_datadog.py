@@ -64,7 +64,7 @@ class StatsD(object):
         Available Flask-Datadog config settings:
 
           DATADOG_CONFIGURE_MIDDLEWARE - whether or not to setup response timing middleware (default: True)
-          DATADOG_RESPONSE_TIME_METRIC_NAME - the name of the response time metric (default: 'flask.response.time')
+          DATADOG_RESPONSE_METRIC_NAME - the name of the response time metric (default: 'flask.response.time')
           DATADOG_RESPONSE_SIZE_METRIC_NAME - the name of the response time metric (default: 'flask.response.size')
           DATADOG_RESPONSE_SAMPLE_RATE - the sample rate to use for response timing middleware (default: 1)
           DATADOG_RESPONSE_AUTO_TAG - whether to auto-add request/response tags to response metrics (default: True)
@@ -122,7 +122,7 @@ class StatsD(object):
         # Configure response time middleware (if desired)
         self.config.setdefault('DATADOG_CONFIGURE_MIDDLEWARE', True)
         self.config.setdefault('DATADOG_RESPONSE_SIZE_METRIC_NAME', 'flask.response.size')
-        self.config.setdefault('DATADOG_RESPONSE_TIME_METRIC_NAME', 'flask.response.time')
+        self.config.setdefault('DATADOG_RESPONSE_METRIC_NAME', 'flask.response.time')
         self.config.setdefault('DATADOG_RESPONSE_SAMPLE_RATE', 1)
         self.config.setdefault('DATADOG_RESPONSE_AUTO_TAG', True)
         self.config.setdefault('DATADOG_RESPONSE_ENDPOINT_TAG_NAME', 'endpoint')
@@ -175,7 +175,7 @@ class StatsD(object):
         tags = self.get_request_tags()
 
         # Emit timing metric
-        self.statsd.timing(self.config['DATADOG_RESPONSE_TIME_METRIC_NAME'],
+        self.statsd.timing(self.config['DATADOG_RESPONSE_METRIC_NAME'],
                            elapsed,
                            tags,
                            self.config['DATADOG_RESPONSE_SAMPLE_RATE'])
