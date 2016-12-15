@@ -3,10 +3,11 @@ import time
 from datadog import initialize
 from datadog import api as dogapi
 from datadog.dogstatsd.base import DogStatsd
+from datadog.dogstatsd.context import TimedContextManagerDecorator
 from flask import g, request
 
 
-class TimerWrapper(DogStatsd._TimedContextManagerDecorator):
+class TimerWrapper(TimedContextManagerDecorator):
     def __init__(self, statsd, *args, **kwargs):
         super(TimerWrapper, self).__init__(statsd, *args, **kwargs)
 
@@ -64,6 +65,7 @@ class StatsD(object):
 
           DATADOG_CONFIGURE_MIDDLEWARE - whether or not to setup response timing middleware (default: True)
           DATADOG_RESPONSE_METRIC_NAME - the name of the response time metric (default: 'flask.response.time')
+          DATADOG_RESPONSE_SIZE_METRIC_NAME - the name of the response time metric (default: 'flask.response.size')
           DATADOG_RESPONSE_SAMPLE_RATE - the sample rate to use for response timing middleware (default: 1)
           DATADOG_RESPONSE_AUTO_TAG - whether to auto-add request/response tags to response metrics (default: True)
           DATADOG_RESPONSE_ENDPOINT_TAG_NAME - tag name to use for request endpoint tag name (default: 'endpoint')
@@ -119,6 +121,7 @@ class StatsD(object):
         """Helper to configure/setup any Flask-Datadog middleware"""
         # Configure response time middleware (if desired)
         self.config.setdefault('DATADOG_CONFIGURE_MIDDLEWARE', True)
+        self.config.setdefault('DATADOG_RESPONSE_SIZE_METRIC_NAME', 'flask.response.size')
         self.config.setdefault('DATADOG_RESPONSE_METRIC_NAME', 'flask.response.time')
         self.config.setdefault('DATADOG_RESPONSE_SAMPLE_RATE', 1)
         self.config.setdefault('DATADOG_RESPONSE_AUTO_TAG', True)
@@ -169,11 +172,22 @@ class StatsD(object):
         if self.config['DATADOG_RESPONSE_AUTO_TAG']:
             self.add_request_tags(['status_code:%s' % (response.status_code, )])
 
-        # Emit our timing metric
+        tags = self.get_request_tags()
+        sample_rate = self.config['DATADOG_RESPONSE_SAMPLE_RATE']
+
+        # Emit timing metric
         self.statsd.timing(self.config['DATADOG_RESPONSE_METRIC_NAME'],
                            elapsed,
-                           self.get_request_tags(),
-                           self.config['DATADOG_RESPONSE_SAMPLE_RATE'])
+                           tags,
+                           sample_rate)
+
+        # Emit response size metric
+        if 'content-length' in response.headers:
+            size = int(response.headers['content-length'])
+            self.statsd.histogram(self.config['DATADOG_RESPONSE_SIZE_METRIC_NAME'],
+                                  size,
+                                  tags,
+                                  sample_rate)
 
         # We ALWAYS have to return the original response
         return response
