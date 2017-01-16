@@ -19,10 +19,11 @@ Usage
 You only need to import and initialize your app ::
 
     from flask import Flask
-    from flask.ext.datadog import StatsD
+    from flask.ext.datadog import API, StatsD
 
     app = Flask(__name__)
     app.config['STATSD_HOST'] = 'statsd.local'
+    app.config['DATADOG_API_KEY']  = 'api_key'
+    app.config['DATADOG_APP_KEY']  = 'app_key'
     statsd = StatsD(app)
-
-
+    dogapi = API(app)
