@@ -90,17 +90,19 @@ class StatsD(object):
         self.config.setdefault('STATSD_PORT', 8125)
         self.config.setdefault('STATSD_TAGS', None)
         self.config.setdefault('STATSD_USEMS', False)
+        self.config.setdefault('STATSD_SOCKET_PATH', None)
 
         self.app = app
 
         # Configure DogStatsd client
-        # https://github.com/DataDog/datadogpy/blob/v0.11.0/datadog/dogstatsd/base.py
+        # https://github.com/DataDog/datadogpy/blob/v0.20.0/datadog/dogstatsd/base.py
         self.statsd = DogStatsd(host=self.config['STATSD_HOST'],
                                 port=self.config['STATSD_PORT'],
                                 max_buffer_size=self.config['STATSD_MAX_BUFFER_SIZE'],
                                 namespace=self.config['STATSD_NAMESPACE'],
                                 constant_tags=self.config['STATSD_TAGS'],
-                                use_ms=self.config['STATSD_USEMS'])
+                                use_ms=self.config['STATSD_USEMS'],
+                                socket_path=self.config['STATSD_SOCKET_PATH'])
 
         # Configure any of our middleware
         self.setup_middleware()
