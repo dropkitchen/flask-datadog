@@ -323,4 +323,4 @@ class API(object):
         # If `self.statsd` has the attribute then return that attribute
         if dogapi and hasattr(dogapi, name):
             return getattr(dogapi, name)
-        raise AttributeError('\'API\' has has attribute \'{name}\''.format(name=name))
+        raise AttributeError("'API' has no attribute '{name}'".format(name=name))
