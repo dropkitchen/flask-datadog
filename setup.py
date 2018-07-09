@@ -12,7 +12,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    install_requires=['Flask', 'datadog>=0.17'],
+    install_requires=['Flask', 'datadog>=0.22'],
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
