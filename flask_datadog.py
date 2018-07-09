@@ -21,9 +21,9 @@ class TimerWrapper(TimedContextManagerDecorator):
 class StatsD(object):
     def __init__(self, app=None, config=None):
         """
-        Constructor for `flask.ext.datadog.StatsD`
+        Constructor for `flask_datadog.StatsD`
 
-        >>> from flask.ext.datadog import StatsD
+        >>> from flask_datadog import StatsD
         >>> app = Flask(__name__)
         >>> statsd = StatsD(app=app)
 
@@ -47,7 +47,7 @@ class StatsD(object):
         """
         Initialize Datadog DogStatsd client from Flask app
 
-        >>> from flask.ext.datadog import StatsD
+        >>> from flask_datadog import StatsD
         >>> app = Flask(__name__)
         >>> statsd = StatsD()
         >>> statsd.init_app(app=app)
@@ -249,9 +249,9 @@ class StatsD(object):
 class API(object):
     def __init__(self, app=None, config=None):
         """
-        Constructor for `flask.ext.datadog.API`
+        Constructor for `flask_datadog.API`
 
-        >>> from flask.ext.datadog import API
+        >>> from flask_datadog import API
         >>> app = Flask(__name__)
         >>> dogapi = API(app=app)
 
@@ -274,7 +274,7 @@ class API(object):
         """
         Initialize Datadog API client from Flask app
 
-        >>> from flask.ext.datadog import API
+        >>> from flask_datadog import API
         >>> app = Flask(__name__)
         >>> dogapi = API()
         >>> dogapi.init_app(app=app)
