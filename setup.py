@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='Flask-Datadog',
-    version='0.1.4',
+    version='0.1.5',
     url='https://github.com/50onRed/flask-datadog.git',
     license='BSD',
     author='50onRed',
