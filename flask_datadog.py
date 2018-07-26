@@ -129,6 +129,7 @@ class StatsD(object):
         self.config.setdefault('DATADOG_RESPONSE_AUTO_TAG', True)
         self.config.setdefault('DATADOG_RESPONSE_ENDPOINT_TAG_NAME', 'endpoint')
         self.config.setdefault('DATADOG_RESPONSE_METHOD_TAG_NAME', 'method')
+
         if self.config['DATADOG_CONFIGURE_MIDDLEWARE']:
             self.app.before_request(self.before_request)
             self.app.after_request(self.after_request)
@@ -138,8 +139,8 @@ class StatsD(object):
         Flask-Datadog middleware handle for before each request
         """
         # Set the request start time
-        g.flask_datadog_start_time = time.time()
-        g.flask_datadog_request_tags = []
+        g.request_start_time = time.time()
+        g.request_tags = []
 
         # Add some default request tags
         if self.config['DATADOG_RESPONSE_AUTO_TAG']:
@@ -161,18 +162,18 @@ class StatsD(object):
         :rtype: ``flask.Response``
         """
         # Return early if we don't have the start time
-        if not hasattr(g, 'flask_datadog_start_time'):
+        if not hasattr(g, 'request_start_time'):
             return response
 
         # Get the response time for this request
-        elapsed = time.time() - g.flask_datadog_start_time
+        elapsed = time.time() - g.request_start_time
         # Convert the elapsed time to milliseconds if they want them
         if self.use_ms:
             elapsed = int(round(1000 * elapsed))
 
         # Add some additional response tags
         if self.config['DATADOG_RESPONSE_AUTO_TAG']:
-            self.add_request_tags(['status_code:%s' % (response.status_code, )])
+            self.add_request_tags(['status_code:%d' % response.status_code])
 
         tags = self.get_request_tags()
         sample_rate = self.config['DATADOG_RESPONSE_SAMPLE_RATE']
@@ -200,7 +201,7 @@ class StatsD(object):
 
         :rtype: list
         """
-        return getattr(g, 'flask_datadog_request_tags', [])
+        return g.get('request_tags', [])
 
     def add_request_tags(self, tags):
         """
@@ -215,8 +216,8 @@ class StatsD(object):
         current_tags = self.get_request_tags()
 
         # Append our new tags, and return the new full list of tags for this request
-        g.flask_datadog_request_tags = current_tags + tags
-        return g.flask_datadog_request_tags
+        g.request_tags = current_tags + tags
+        return g.request_tags
 
     def __getattr__(self, name):
         """
@@ -228,7 +229,8 @@ class StatsD(object):
         # If `self.statsd` has the attribute then return that attribute
         if self.statsd and hasattr(self.statsd, name):
             return getattr(self.statsd, name)
-        raise AttributeError('\'StatsD\' has has attribute \'{name}\''.format(name=name))
+
+        raise AttributeError("'StatsD' has has attribute '{name}'".format(name=name))
 
     def __enter__(self):
         """
@@ -323,4 +325,5 @@ class API(object):
         # If `self.statsd` has the attribute then return that attribute
         if dogapi and hasattr(dogapi, name):
             return getattr(dogapi, name)
+
         raise AttributeError("'API' has no attribute '{name}'".format(name=name))
