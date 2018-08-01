@@ -165,8 +165,12 @@ class StatsD(object):
         if not hasattr(g, 'request_start_time'):
             return response
 
-        # Get the response time for this request
-        elapsed = time.time() - g.request_start_time
+        # start time might have been already computed by core middleware
+        elapsed = g.get('request_elapsed_time')
+        if not elapsed:
+            # Get the response time for this request
+            elapsed = time.time() - g.request_start_time
+
         # Convert the elapsed time to milliseconds if they want them
         if self.use_ms:
             elapsed = int(round(1000 * elapsed))
