@@ -109,14 +109,30 @@ class StatsD(object):
 
     def timer(self, *args, **kwargs):
         """Helper to get a `flask_datadog.TimerWrapper` for this `DogStatsd` client"""
+        if 'tags' not in kwargs:
+            kwargs['tags'] = self.get_request_tags()
+
         return TimerWrapper(self.statsd, *args, **kwargs)
 
     def incr(self, *args, **kwargs):
         """Helper to expose `self.statsd.increment` under a shorter name"""
+        if 'tags' not in kwargs:
+            kwargs['tags'] = self.get_request_tags()
+
         return self.statsd.increment(*args, **kwargs)
 
     def decr(self, *args, **kwargs):
         """Helper to expose `self.statsd.decrement` under a shorter name"""
+        if 'tags' not in kwargs:
+            kwargs['tags'] = self.get_request_tags()
+
+        return self.statsd.decrement(*args, **kwargs)
+
+    def gauge(self, *args, **kwargs):
+        """Helper to expose `self.statsd.gauge` with auto tagging"""
+        if 'tags' not in kwargs:
+            kwargs['tags'] = self.get_request_tags()
+
         return self.statsd.decrement(*args, **kwargs)
 
     def setup_middleware(self):
