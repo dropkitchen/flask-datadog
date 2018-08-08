@@ -221,7 +221,10 @@ class StatsD(object):
 
         :rtype: list
         """
-        return g.get('request_tags', [])
+        try:
+            return g.get('request_tags', [])
+        except RuntimeError:
+            return []
 
     def add_request_tags(self, tags):
         """
@@ -236,8 +239,11 @@ class StatsD(object):
         current_tags = self.get_request_tags()
 
         # Append our new tags, and return the new full list of tags for this request
-        g.request_tags = current_tags + tags
-        return g.request_tags
+        try:
+            g.request_tags = current_tags + tags
+            return g.request_tags
+        except RuntimeError:
+            return []
 
     def __getattr__(self, name):
         """
