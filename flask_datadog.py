@@ -107,32 +107,31 @@ class StatsD(object):
         # Configure any of our middleware
         self.setup_middleware()
 
-    def timer(self, *args, **kwargs):
-        """Helper to get a `flask_datadog.TimerWrapper` for this `DogStatsd` client"""
-        if 'tags' not in kwargs:
+    def _setdefault_tags(self, kwargs):
+        tags = kwargs.get('tags')
+        if tags is None:
             kwargs['tags'] = self.get_request_tags()
 
+        return kwargs
+
+    def timer(self, *args, **kwargs):
+        """Helper to get a `flask_datadog.TimerWrapper` for this `DogStatsd` client"""
+        self._setdefault_tags(kwargs)
         return TimerWrapper(self.statsd, *args, **kwargs)
 
     def incr(self, *args, **kwargs):
         """Helper to expose `self.statsd.increment` under a shorter name"""
-        if 'tags' not in kwargs:
-            kwargs['tags'] = self.get_request_tags()
-
+        self._setdefault_tags(kwargs)
         return self.statsd.increment(*args, **kwargs)
 
     def decr(self, *args, **kwargs):
         """Helper to expose `self.statsd.decrement` under a shorter name"""
-        if 'tags' not in kwargs:
-            kwargs['tags'] = self.get_request_tags()
-
+        self._setdefault_tags(kwargs)
         return self.statsd.decrement(*args, **kwargs)
 
     def gauge(self, *args, **kwargs):
         """Helper to expose `self.statsd.gauge` with auto tagging"""
-        if 'tags' not in kwargs:
-            kwargs['tags'] = self.get_request_tags()
-
+        self._setdefault_tags(kwargs)
         return self.statsd.decrement(*args, **kwargs)
 
     def setup_middleware(self):
@@ -241,9 +240,10 @@ class StatsD(object):
         # Append our new tags, and return the new full list of tags for this request
         try:
             g.request_tags = current_tags + tags
-            return g.request_tags
         except RuntimeError:
             return []
+
+        return g.request_tags
 
     def __getattr__(self, name):
         """
