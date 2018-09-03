@@ -132,7 +132,7 @@ class StatsD(object):
     def gauge(self, *args, **kwargs):
         """Helper to expose `self.statsd.gauge` with auto tagging"""
         self._setdefault_tags(kwargs)
-        return self.statsd.decrement(*args, **kwargs)
+        return self.statsd.gauge(*args, **kwargs)
 
     def setup_middleware(self):
         """Helper to configure/setup any Flask-Datadog middleware"""
