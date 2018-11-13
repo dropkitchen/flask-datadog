@@ -1,13 +1,35 @@
+import logging
 import time
 
 from datadog import initialize
 from datadog import api as dogapi
 from datadog.dogstatsd.base import DogStatsd
 from datadog.dogstatsd.context import TimedContextManagerDecorator
-from flask import g, request
+from flask import (
+    g,
+    request,
+)
 
 
-class TimerWrapper(TimedContextManagerDecorator):
+LOG = logging.getLogger(__name__)
+
+
+class _TimedContextManagerDecorator(TimedContextManagerDecorator):
+
+    def _send(self, start):
+        elapsed = time.time() - start
+        use_ms = self.use_ms if self.use_ms is not None else True
+        elapsed = int(round(1000 * elapsed)) if use_ms else elapsed
+
+        if self.statsd:
+            self.statsd.timing(self.metric, elapsed, self.tags, self.sample_rate)
+        else:
+            LOG.debug('TimedContextManagerDecorator: %s took %dms', self.metric, elapsed)
+
+        self.elapsed = elapsed
+
+
+class TimerWrapper(_TimedContextManagerDecorator):
     def __init__(self, statsd, *args, **kwargs):
         super(TimerWrapper, self).__init__(statsd, *args, **kwargs)
 
