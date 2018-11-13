@@ -36,6 +36,7 @@ class StatsD(object):
         """
         self.config = config
         self.statsd = None
+        self.is_enabled = False
 
         # If an app was provided, then call `init_app` for them
         if app is not None:
@@ -106,6 +107,7 @@ class StatsD(object):
 
         # Configure any of our middleware
         self.setup_middleware()
+        self.is_enabled = True
 
     def _setdefault_tags(self, kwargs):
         tags = kwargs.get('tags')
@@ -116,23 +118,28 @@ class StatsD(object):
 
     def timer(self, *args, **kwargs):
         """Helper to get a `flask_datadog.TimerWrapper` for this `DogStatsd` client"""
-        self._setdefault_tags(kwargs)
+        if self.is_enabled:
+            self._setdefault_tags(kwargs)
+
         return TimerWrapper(self.statsd, *args, **kwargs)
 
     def incr(self, *args, **kwargs):
         """Helper to expose `self.statsd.increment` under a shorter name"""
-        self._setdefault_tags(kwargs)
-        return self.statsd.increment(*args, **kwargs)
+        if self.is_enabled:
+            self._setdefault_tags(kwargs)
+            return self.statsd.increment(*args, **kwargs)
 
     def decr(self, *args, **kwargs):
         """Helper to expose `self.statsd.decrement` under a shorter name"""
-        self._setdefault_tags(kwargs)
-        return self.statsd.decrement(*args, **kwargs)
+        if self.is_enabled:
+            self._setdefault_tags(kwargs)
+            return self.statsd.decrement(*args, **kwargs)
 
     def gauge(self, *args, **kwargs):
         """Helper to expose `self.statsd.gauge` with auto tagging"""
-        self._setdefault_tags(kwargs)
-        return self.statsd.gauge(*args, **kwargs)
+        if self.is_enabled:
+            self._setdefault_tags(kwargs)
+            return self.statsd.gauge(*args, **kwargs)
 
     def setup_middleware(self):
         """Helper to configure/setup any Flask-Datadog middleware"""
