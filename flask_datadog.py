@@ -116,6 +116,7 @@ class StatsD(object):
         self.config.setdefault('STATSD_SOCKET_PATH', None)
 
         self.app = app
+        self.app.extensions['statsd'] = self
 
         # Configure DogStatsd client
         # https://github.com/DataDog/datadogpy/blob/v0.20.0/datadog/dogstatsd/base.py
