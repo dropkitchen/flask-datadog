@@ -17,7 +17,7 @@ LOG = logging.getLogger(__name__)
 class _TimedContextManagerDecorator(TimedContextManagerDecorator):
 
     def _send(self, start):
-        elapsed = time.time() - start
+        elapsed = time.monotonic() - start
         use_ms = self.use_ms if self.use_ms is not None else True
         elapsed = int(round(1000 * elapsed)) if use_ms else elapsed
 
@@ -184,7 +184,7 @@ class StatsD(object):
         Flask-Datadog middleware handle for before each request
         """
         # Set the request start time
-        g.request_start_time = time.time()
+        g.request_start_time = time.monotonic()
         g.request_tags = []
 
         # Add some default request tags
